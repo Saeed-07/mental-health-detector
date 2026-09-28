@@ -63,11 +63,24 @@ with st.sidebar:
     )
 
 
+@st.cache_resource(show_spinner="Loading emotion model (first load takes about a minute)...")
+def load_emotion_detector(backend_name):
+    """Load the heavy TensorFlow model ONCE, before the webcam connects.
+
+    If this were created inside the video processor, the model would load
+    after you press START and the connection would time out (streamlit-webrtc
+    only waits 10 seconds for the processor to be ready)."""
+    return EmotionDetector(backend=backend_name)
+
+
+emotion_detector = load_emotion_detector(backend)
+
+
 class VideoProcessor(VideoProcessorBase):
-    def __init__(self, backend="fer", ear_threshold=0.21, emotion_every_n=5):
+    def __init__(self, emotion_detector, ear_threshold=0.21, emotion_every_n=5):
         self.face_detector = FaceMeshDetector()
         self.drowsiness = DrowsinessMonitor(ear_threshold=ear_threshold)
-        self.emotion_detector = EmotionDetector(backend=backend)
+        self.emotion_detector = emotion_detector
         self.emotion_every_n = emotion_every_n
         self.frame_idx = 0
         self.last_dominant = None
@@ -126,7 +139,11 @@ class VideoProcessor(VideoProcessorBase):
 
 
 def make_processor():
-    return VideoProcessor(backend=backend, ear_threshold=ear_threshold, emotion_every_n=emotion_every_n)
+    return VideoProcessor(
+        emotion_detector=emotion_detector,
+        ear_threshold=ear_threshold,
+        emotion_every_n=emotion_every_n,
+    )
 
 
 col_video, col_dash = st.columns([3, 2])
