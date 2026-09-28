@@ -17,7 +17,6 @@ import cv2
 import pandas as pd
 import streamlit as st
 from streamlit_webrtc import (
-    RTCConfiguration,
     VideoProcessorBase,
     WebRtcMode,
     webrtc_streamer,
@@ -32,7 +31,6 @@ st.set_page_config(page_title="Mental Health Tracker", layout="wide", page_icon=
 
 # STUN server so the browser<->server webcam connection can traverse NAT —
 # needed once this is deployed off localhost (e.g. Streamlit Community Cloud).
-RTC_CONFIGURATION = RTCConfiguration({"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]})
 
 if "metrics_store" not in st.session_state:
     st.session_state.metrics_store = MetricsStore()
@@ -152,9 +150,11 @@ with col_video:
     ctx = webrtc_streamer(
         key="mental-health-tracker",
         mode=WebRtcMode.SENDRECV,
-        rtc_configuration=RTC_CONFIGURATION,
         video_processor_factory=make_processor,
-        media_stream_constraints={"video": True, "audio": False},
+        media_stream_constraints={
+            "video": True,
+            "audio": False
+        },
         async_processing=True,
     )
 
