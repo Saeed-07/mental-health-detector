@@ -9,3 +9,4 @@ opencv-python-headless==4.10.0.84
 fer==22.5.1
 moviepy==1.0.3
 pandas
+setuptools<82
